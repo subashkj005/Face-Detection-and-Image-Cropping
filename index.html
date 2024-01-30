@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Face Detection and Cropping</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h1>Upload and Process an Image</h1>
+    <form id="uploadForm" enctype="multipart/form-data">
+        <label for="image">Choose File</label>
+        <input type="file" name="image" id="image" accept="image/*" onchange="previewImage()">
+        <button type="button" onclick="processImage()">Process Image</button>
+    </form>
+
+    <div id="image-preview">
+        <h2>Selected Image</h2>
+        <img id="selected-image" alt="Selected Image">
+    </div>
+
+    <div id="result-popup" style="display: none;">
+        <h2>Processed Image</h2>
+        <img id="processed-image" alt="Processed Image">
+        <p id="result-message"></p>
+    </div>
+
+    <script>
+        function previewImage() {
+            const input = document.getElementById('image');
+            const selectedImage = document.getElementById('selected-image');
+    
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    selectedImage.src = e.target.result;
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+    
+        function processImage() {
+            const formData = new FormData(document.getElementById('uploadForm'));
+    
+            fetch('/process_image', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                console.log('res =>', response)
+                if (response.ok) {
+                    return response.blob();
+                } else {
+                    throw new Error('Image processing failed');
+                }
+            })
+            .then(blob => {
+                const imageUrl = URL.createObjectURL(blob);
+
+                const resultPopup = document.getElementById('result-popup');
+                const processedImage = document.getElementById('processed-image');
+                const resultMessage = document.getElementById('result-message');
+    
+                processedImage.src = imageUrl;
+
+                if (imageUrl) {
+
+                    resultMessage.textContent = 'Image processed successfully';
+                    resultPopup.style.display = 'block';
+                } else {
+                    resultMessage.textContent = 'Image process failed ..!';
+                    resultPopup.style.display = 'block';
+
+                }
+    
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+                const processButton = document.getElementById('image');
+                processButton.focus();
+            })
+            .catch(error => {
+                
+                alert('Error: ' + error.message);
+            });
+        }
+    </script>
+    
+</body>
+</html>
